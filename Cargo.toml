@@ -1,0 +1,13 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+axum = "0.7.2"
+tokio = { version = "1.35.1", features = ["macros", "rt-multi-thread"] }
+tower = "0.4.13"
+uuid = { version = "1.6.1", features = ["serde"] }
