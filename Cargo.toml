@@ -11,3 +11,14 @@ axum = "0.7.2"
 tokio = { version = "1.35.1", features = ["macros", "rt-multi-thread"] }
 tower = "0.4.13"
 uuid = { version = "1.6.1", features = ["serde"] }
+tracing = "0.1.40"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+tower-http = { version = "0.5.0", features = ["trace"] }
+
+sqlx = { version = "0.7.3", features = ["runtime-tokio", "mysql", "postgres", "sqlite"] }
+dotenv = "0.15.0"
+
+thiserror = "1.0.51"
+serde = { version = "1.0.193", features = ["derive"] }
+rand = "0.8.5"
+color-eyre = "0.6.2"
