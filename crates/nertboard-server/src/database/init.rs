@@ -19,31 +19,32 @@ CREATE TABLE IF NOT EXISTS boards
     .await
     .context("when creating table `boards`")?;
 
-    sqlx::query(
-        "
-CREATE TABLE IF NOT EXISTS players
-(
-    player_id INTEGER NOT NULL PRIMARY KEY,
-    name TEXT NOT NULL
-)
-        ",
-    )
-    .execute(database)
-    .await
-    .context("when creating table `players`")?;
+    // TODO
+    //     sqlx::query(
+    //         "
+    // CREATE TABLE IF NOT EXISTS players
+    // (
+    //     player_id INTEGER NOT NULL PRIMARY KEY,
+    //     name TEXT NOT NULL
+    // )
+    //         ",
+    //     )
+    //     .execute(database)
+    //     .await
+    //     .context("when creating table `players`")?;
 
     sqlx::query(
         "
 CREATE TABLE IF NOT EXISTS scores
 (
     board_id INTEGER NOT NULL,
-    player_id INTEGER NOT NULL,
+    player INTEGER NOT NULL,
     score INTEGER NOT NULL,
     extra_info TEXT,
-    FOREIGN KEY(board_id) REFERENCES boards(board_id),
-    FOREIGN KEY(player_id) REFERENCES players(player_id)
+    FOREIGN KEY(board_id) REFERENCES boards(board_id)
 )
         ",
+        // FOREIGN KEY(player_id) REFERENCES players(player_id)
     )
     .execute(database)
     .await

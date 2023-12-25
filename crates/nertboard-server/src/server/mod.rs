@@ -143,7 +143,26 @@ async fn delete_board(
     Ok(())
 }
 
-async fn submit_score() {}
+async fn submit_score(
+    Path(board_name): Path<String>,
+    State(database): State<Arc<DatabasePool>>,
+    api_key: Option<ApiKey>,
+    Json(score): Json<ScoreRecord>,
+) -> Result<()> {
+    let (board_id, auth) = check_board(Path(board_name), State(database.clone()), api_key).await?;
+    check_auth(auth, AuthorityLevel::Submit)?;
+
+    // Insert a new score
+    sqlx::query("INSERT INTO scores (board_id, player, score, extra_info) VALUES (?, ?, ?, ?)")
+        .bind(board_id)
+        .bind(score.player)
+        .bind(score.score)
+        .bind(score.extra_info)
+        .execute(&*database)
+        .await?;
+
+    Ok(())
+}
 
 async fn get_scores(
     Path(board_name): Path<String>,
@@ -154,11 +173,11 @@ async fn get_scores(
     check_auth(auth, AuthorityLevel::Read)?;
 
     // Fetch scores
-    let scores = sqlx::query("SELECT player_id, score, extra_info FROM scores WHERE board_id = ?")
+    let scores = sqlx::query("SELECT player, score, extra_info FROM scores WHERE board_id = ?")
         .bind(board_id)
         .try_map(|row: AnyRow| {
             Ok(ScoreRecord {
-                player_id: row.try_get("player_id")?,
+                player: row.try_get("player")?,
                 score: row.try_get("score")?,
                 extra_info: row.try_get("extra_info").ok(),
             })
