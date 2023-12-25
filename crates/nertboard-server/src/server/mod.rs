@@ -6,7 +6,7 @@ use crate::{
 
 use axum::{
     extract::{Path, State},
-    routing::get,
+    routing::{get, post},
     Json, Router,
 };
 use sqlx::{any::AnyRow, Row};
@@ -26,7 +26,11 @@ pub async fn run(database_pool: DatabasePool) -> color_eyre::Result<()> {
 fn app(database_pool: Arc<DatabasePool>) -> Router {
     Router::new()
         .route("/", get(get_root))
-        .route("/board/:board_name", get(get_scores))
+        .route(
+            "/board/:board_name",
+            get(get_scores).post(submit_score).delete(delete_board),
+        )
+        .route("/board/create", post(create_board))
         .layer(TraceLayer::new_for_http())
         .with_state(database_pool)
 }
@@ -75,7 +79,50 @@ fn check_auth(auth: AuthorityLevel, required: AuthorityLevel) -> Result<()> {
     }
 }
 
-async fn create_board() {}
+fn validate_board_name(name: String) -> Result<String> {
+    let name = name.trim().to_owned();
+    if name.is_empty() {
+        return Err(RequestError::InvalidBoardName(name));
+    }
+    Ok(name)
+}
+
+async fn create_board(
+    State(database): State<Arc<DatabasePool>>,
+    Json(board_name): Json<String>,
+) -> Result<Json<BoardKeys>> {
+    // Validate the name
+    let board_name = validate_board_name(board_name)?;
+
+    // Check if a board with this name already exists
+    let check = check_board(Path(board_name.clone()), State(database.clone()), None).await;
+    if check.is_ok() {
+        return Err(RequestError::BoardAlreadyExists(board_name));
+    }
+
+    // Generate keys
+    let keys = BoardKeys::generate();
+
+    // Create an entry
+    sqlx::query(
+        "
+INSERT INTO boards (board_name, read_key, submit_key, admin_key)
+VALUES (?, ?, ?, ?)
+        ",
+    )
+    .bind(board_name)
+    .bind(keys.read.inner())
+    .bind(keys.submit.inner())
+    .bind(keys.admin.inner())
+    .execute(&*database)
+    .await?;
+
+    Ok(Json(keys))
+}
+
+async fn delete_board() -> Result<()> {
+    Ok(())
+}
 
 async fn submit_score() {}
 
