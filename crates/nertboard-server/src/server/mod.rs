@@ -120,7 +120,26 @@ VALUES (?, ?, ?, ?)
     Ok(Json(keys))
 }
 
-async fn delete_board() -> Result<()> {
+async fn delete_board(
+    Path(board_name): Path<String>,
+    State(database): State<Arc<DatabasePool>>,
+    api_key: Option<ApiKey>,
+) -> Result<()> {
+    let (board_id, auth) = check_board(Path(board_name), State(database.clone()), api_key).await?;
+    check_auth(auth, AuthorityLevel::Admin)?;
+
+    // Delete scores
+    sqlx::query("DELETE FROM scores WHERE board_id = ?")
+        .bind(board_id)
+        .execute(&*database)
+        .await?;
+
+    // Delete entry
+    sqlx::query("DELETE FROM boards WHERE board_id = ?")
+        .bind(board_id)
+        .execute(&*database)
+        .await?;
+
     Ok(())
 }
 
