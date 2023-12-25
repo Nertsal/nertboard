@@ -33,5 +33,10 @@ pub fn setup() -> Result<()> {
 pub async fn connect_database(url: &str) -> Result<DatabasePool> {
     tracing::info!("Connecting to database {}", url);
     let pool = DatabasePool::connect(url).await?;
+
+    crate::database::init_database(&pool)
+        .await
+        .context("when initializing the database")?;
+
     Ok(pool)
 }

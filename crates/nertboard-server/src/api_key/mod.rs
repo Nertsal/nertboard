@@ -12,7 +12,19 @@ pub struct BoardKeys {
     pub admin: StringKey,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum AuthorityLevel {
+    Unauthorized,
+    Read,
+    Submit,
+    Admin,
+}
+
 impl StringKey {
+    pub fn new(key: impl Into<Box<str>>) -> Self {
+        Self(key.into())
+    }
+
     pub fn inner(&self) -> &str {
         &self.0
     }
@@ -34,6 +46,18 @@ impl BoardKeys {
             read: StringKey::generate(10),
             submit: StringKey::generate(10),
             admin: StringKey::generate(20),
+        }
+    }
+
+    pub fn check_authority(&self, key: &str) -> AuthorityLevel {
+        if key == self.read.inner() {
+            AuthorityLevel::Read
+        } else if key == self.submit.inner() {
+            AuthorityLevel::Submit
+        } else if key == self.admin.inner() {
+            AuthorityLevel::Admin
+        } else {
+            AuthorityLevel::Unauthorized
         }
     }
 }
