@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use crate::{
     api_key::{ApiKey, AuthorityLevel, BoardKeys, StringKey},
     database::{DatabasePool, Id, RequestError, RequestResult as Result, ScoreRecord},
