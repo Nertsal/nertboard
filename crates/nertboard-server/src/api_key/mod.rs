@@ -78,3 +78,20 @@ impl<S> axum::extract::FromRequestParts<S> for ApiKey {
         }
     }
 }
+
+pub struct PlayerKey(pub String);
+
+#[axum::async_trait]
+impl<S> axum::extract::FromRequestParts<S> for PlayerKey {
+    type Rejection = (StatusCode, &'static str);
+
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        match parts.headers.get("player-key") {
+            None => Err((StatusCode::BAD_REQUEST, "player key missing")),
+            Some(key) => match key.to_str() {
+                Ok(key) => Ok(Self(key.to_string())),
+                Err(_) => Err((StatusCode::BAD_REQUEST, "player key is invalid")),
+            },
+        }
+    }
+}

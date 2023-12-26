@@ -14,7 +14,7 @@ pub type Score = i32;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScoreRecord {
-    pub player: String,
+    pub player_id: Id,
     pub score: Score,
     pub extra_info: Option<String>,
 }
@@ -25,6 +25,8 @@ pub enum RequestError {
     Unathorized,
     #[error("unathorized request, not enough rights")]
     Forbidden,
+    #[error("player key is invalid")]
+    InvalidPlayer,
     #[error("invalid board name: {0}")]
     InvalidBoardName(String),
     #[error("a board called {0} already exists")]
@@ -40,6 +42,7 @@ impl RequestError {
         match self {
             RequestError::Unathorized => StatusCode::UNAUTHORIZED,
             RequestError::Forbidden => StatusCode::FORBIDDEN,
+            RequestError::InvalidPlayer => StatusCode::FORBIDDEN,
             RequestError::InvalidBoardName(_) => StatusCode::BAD_REQUEST,
             RequestError::BoardAlreadyExists(_) => StatusCode::CONFLICT,
             RequestError::NoSuchBoard(_) => StatusCode::NOT_FOUND,
