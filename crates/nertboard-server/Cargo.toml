@@ -19,6 +19,7 @@ tower-http.workspace = true
 sqlx.workspace = true
 dotenv.workspace = true
 
+clap.workspace = true
 thiserror.workspace = true
 serde.workspace = true
 rand.workspace = true

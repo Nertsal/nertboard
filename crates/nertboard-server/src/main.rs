@@ -6,8 +6,15 @@ mod setup;
 
 use self::prelude::*;
 
+#[derive(clap::Parser)]
+struct Opts {
+    port: u16,
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
+    let opts: Opts = clap::Parser::parse();
+
     setup::setup()?;
 
     let database_url =
@@ -17,5 +24,7 @@ async fn main() -> Result<()> {
         .await
         .context(format!("when connecting to the database: {}", database_url))?;
 
-    server::run(database_pool).await.context("server error")
+    server::run(opts.port, database_pool)
+        .await
+        .context("server error")
 }

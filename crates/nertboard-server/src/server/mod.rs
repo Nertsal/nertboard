@@ -16,8 +16,8 @@ use serde::Deserialize;
 use sqlx::{any::AnyRow, Row};
 use tower_http::trace::TraceLayer;
 
-pub async fn run(database_pool: DatabasePool) -> color_eyre::Result<()> {
-    let addr = "0.0.0.0:3000";
+pub async fn run(port: u16, database_pool: DatabasePool) -> color_eyre::Result<()> {
+    let addr = format!("0.0.0.0:{}", port);
     info!("Starting the server on {}", addr);
     let listener = tokio::net::TcpListener::bind(addr)
         .await
