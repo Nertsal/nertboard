@@ -6,6 +6,7 @@ use axum::{
 };
 use color_eyre::Result;
 use http_body_util::BodyExt;
+use nertboard_core::Player;
 use serde::{de::DeserializeOwned, Serialize};
 use tower::{util::ServiceExt, Service};
 
@@ -60,6 +61,7 @@ async fn response_json<T: DeserializeOwned>(response: Response<Body>) -> Result<
 async fn test_e2e() -> Result<()> {
     let mut app = test_app().await?.into_service();
 
+    // Create board
     let response = app
         .ready()
         .await?
@@ -70,6 +72,18 @@ async fn test_e2e() -> Result<()> {
     assert_eq!(response.status(), StatusCode::OK);
     let keys: BoardKeys = response_json(response).await?;
 
+    // Create player
+    let response = app
+        .ready()
+        .await?
+        .call(request_json(Request::post("/player/create"), &"nertsal")?)
+        .await?;
+
+    println!("{:?}", response);
+    assert_eq!(response.status(), StatusCode::OK);
+    let player: Player = response_json(response).await?;
+
+    // Submit scores
     let scores = vec![
         nertboard_core::ScoreEntry {
             player: "nertsal".to_string(),
@@ -77,17 +91,20 @@ async fn test_e2e() -> Result<()> {
             extra_info: None,
         },
         nertboard_core::ScoreEntry {
-            player: "nert".to_string(),
+            player: "nert".to_string(), // Change name
             score: 5,
             extra_info: Some("very cool".to_string()),
         },
     ];
 
+    // First score
     let response = app
         .ready()
         .await?
         .call(request_json(
-            Request::post("/board/test-table").header("api-key", keys.submit.inner()),
+            Request::post(format!("/board/test-table?player_id={}", player.id))
+                .header("api-key", keys.submit.inner())
+                .header("player-key", &player.key),
             &scores[0],
         )?)
         .await?;
@@ -95,11 +112,14 @@ async fn test_e2e() -> Result<()> {
     println!("{:?}", response);
     assert_eq!(response.status(), StatusCode::OK);
 
+    // Second score
     let response = app
         .ready()
         .await?
         .call(request_json(
-            Request::post("/board/test-table").header("api-key", keys.submit.inner()),
+            Request::post(format!("/board/test-table?player_id={}", player.id))
+                .header("api-key", keys.submit.inner())
+                .header("player-key", &player.key),
             &scores[1],
         )?)
         .await?;
@@ -107,6 +127,7 @@ async fn test_e2e() -> Result<()> {
     println!("{:?}", response);
     assert_eq!(response.status(), StatusCode::OK);
 
+    // Retrieve scores
     let response = app
         .ready()
         .await?
@@ -120,7 +141,15 @@ async fn test_e2e() -> Result<()> {
     println!("{:?}", response);
     assert_eq!(response.status(), StatusCode::OK);
     let returned_scores: Vec<nertboard_core::ScoreEntry> = response_json(response).await?;
-    assert_eq!(returned_scores, scores);
+    // Update name
+    let new_scores: Vec<_> = scores
+        .into_iter()
+        .map(|entry| nertboard_core::ScoreEntry {
+            player: "nert".to_string(),
+            ..entry
+        })
+        .collect();
+    assert_eq!(returned_scores, new_scores);
 
     Ok(())
 }
