@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 pub type Score = i32;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ScoreEntry {
     pub player: String,
     pub score: Score,
