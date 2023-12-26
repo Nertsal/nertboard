@@ -147,7 +147,7 @@ async fn submit_score(
     Path(board_name): Path<String>,
     State(database): State<Arc<DatabasePool>>,
     api_key: Option<ApiKey>,
-    Json(score): Json<ScoreRecord>,
+    Json(score): Json<nertboard_core::ScoreEntry>,
 ) -> Result<()> {
     let (board_id, auth) = check_board(Path(board_name), State(database.clone()), api_key).await?;
     check_auth(auth, AuthorityLevel::Submit)?;
