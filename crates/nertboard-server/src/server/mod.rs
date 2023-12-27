@@ -14,7 +14,7 @@ use axum::{
 };
 use serde::Deserialize;
 use sqlx::{any::AnyRow, Row};
-use tower_http::trace::TraceLayer;
+use tower_http::{cors::CorsLayer, trace::TraceLayer};
 
 pub async fn run(port: u16, database_pool: DatabasePool) -> color_eyre::Result<()> {
     let addr = format!("0.0.0.0:{}", port);
@@ -37,6 +37,11 @@ fn app(database_pool: Arc<DatabasePool>) -> Router {
         )
         .route("/board/create", post(create_board))
         .layer(TraceLayer::new_for_http())
+        .layer(
+            CorsLayer::new()
+                .allow_origin(tower_http::cors::Any)
+                .allow_headers(tower_http::cors::Any),
+        )
         .with_state(database_pool)
 }
 
